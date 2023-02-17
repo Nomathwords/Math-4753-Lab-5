@@ -1,0 +1,272 @@
+---
+title: "Lab 4: MATH 4753"
+author: "Hunter DeVoe"
+date: "February 8, 2023"
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: spacelab
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(pacman, tidyverse, lattice, s20x, knitr, devtools, roxygen2, testthat)
+
+mybin=function(iter, n, p){
+  # make a matrix to hold the samples
+  #initially filled with NA's
+  sam.mat=matrix(NA,nr=n,nc=iter, byrow=TRUE)
+  
+  #Make a vector to hold the number of successes in each trial
+  succ=c()
+  
+  for(i in 1:iter){
+    #Fill each column with a new sample
+    sam.mat[,i]=sample(c(1,0),n,replace=TRUE, prob=c(p,1-p))
+    
+    #Calculate a statistic from the sample (this case it is the sum)
+    succ[i]=sum(sam.mat[,i])
+  }
+  
+  #Make a table of successes
+  succ.tab=table(factor(succ,levels=0:n))
+  
+  #Make a barplot of the proportions
+  barplot(succ.tab/(iter), col=rainbow(n+1), main="Binomial Simulation", xlab="Number of Successes")
+  succ.tab/iter
+}
+
+myhyper=function(iter, N, r, n){
+  # Make a matrix to hold the samples
+  # initially filled with NA's
+  sam.mat=matrix(NA,nr=n,nc=iter, byrow=TRUE)
+  
+  # Make a vector to hold the number of successes over the trials
+  succ=c()
+  for(i in 1:iter){
+    # Fill each column with a new sample
+    sam.mat[,i]=sample(rep(c(1,0),c(r,N-r)),n,replace=FALSE)
+    
+    # Calculate a statistic from the sample (this case it is the sum)
+    succ[i]=sum(sam.mat[,i])
+  }
+  
+  # Make a table of successes
+  succ.tab=table(factor(succ,levels=0:n))
+  
+  # Make a barplot of the proportions
+  barplot(succ.tab/(iter), col=rainbow(n+1), main="HYPERGEOMETRIC simulation", xlab="Number of successes")
+  succ.tab/iter
+}
+
+mysample=function(n, iter, time){
+  for(i in 1:iter){
+  #make a sample
+  s=sample(1:10, n, replace = TRUE)
+  # turn the sample into a factor
+  sf=factor(s, levels = 1:10)
+  #make a barplot
+  barplot(table(sf)/n, beside=TRUE, col = rainbow(10), main=paste("Example sample()", " iteration ", i, " n= ", n,sep=""), ylim=c(0,0.2))
+
+  #release the table
+  Sys.sleep(time)
+  }
+}
+```
+
+# Task 1
+
+```{r}
+getwd()
+```
+
+# Task 2
+
+* 100
+```{r}
+iter <- 100
+mybin(iter, 10, 0.7)
+```
+
+* 200
+```{r}
+iter <- 200
+mybin(iter, 10, 0.7)
+```
+
+* 500
+```{r}
+iter <- 500
+mybin(iter, 10, 0.7)
+```
+
+* 1000
+```{r}
+iter <- 1000
+mybin(iter, 10, 0.7)
+```
+
+* 10,000
+```{r}
+iter <- 10000
+mybin(iter, 10, 0.7)
+```
+
+* For the last simulation (10,000 iterations) copy and paste the table that is produced from the function.  
+
+See the final table output above.  
+
+* Verify that each value in the table is approximately correct using dbinom().
+
+```{r}
+round(dbinom(1:10, 10, 0.7), 4)
+```
+
+We can see that these values are very close to the table given from the mybin() function.
+
+# Task 3
+
+* Suppose that there is a bag of 20 marbles, 12 white ("1") and 8 black "0". Using the sample() function create a sample of size n = 5 without replacement.
+
+```{r}
+sample(c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0), 5, replace = FALSE, prob = NULL)
+```
+
+* Now do the same with replace = TRUE
+
+```{r}
+sample(c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0), 5, replace = TRUE, prob = NULL)
+```
+
+* Use the function myhyper(), on Canvas, assume Y = number of whites, remember sampling is without replacement, n = 5. Use this code to make barplots of Y for the following number of iterations:  
+  
+  * 100  
+
+```{r}
+myhyper(iter=100, n = 5, N = 20, r = 12)
+```
+
+  * 200  
+
+```{r}
+myhyper(iter=200, n = 5, N = 20, r = 12)
+```
+
+
+  * 500  
+
+```{r}
+myhyper(iter=500, n = 5, N = 20, r = 12)
+```
+
+
+  * 1000  
+
+```{r}
+myhyper(iter=1000, n = 5, N = 20, r = 12)
+```
+
+
+  * 10,000  
+
+```{r}
+myhyper(iter=10000, n = 5, N = 20, r = 12)
+```
+
+* For the last simulation (10,000 iterations), copy and paste the table that is produced from the function.  
+
+See the final table output above.  
+
+* Verify that each value in the table is approximately correct using dhyper().
+
+```{r}
+round(dhyper(x=0:5, m=12, n=8, k=5), 4)
+```
+
+We can see that these values are very close to the table given from the myhyper() function.  
+
+# Task 4  
+
+* In lab5.r there is a function called mysample(). Look at the code and describewhat you think it should do and record your response here.  
+
+After a brief look at the function, it seems like random samples and the corresponding bar plots are being created, and the number of samples taken depends on how many iterations are given. Once the bar plot is created, R will put it in the console after 0.5 sec (it could be less time, like 0.5 milliseconds; I don't know what the base unit of time is in R).  
+
+* Run the function with the following arguments: mysample(n = 1000, iter = 30, time = 1)  
+
+```{r}
+mysample(n = 1000, iter = 1, time = 1)
+```
+
+Every second, a new bar plot relating to a sample is printed to the console, until samples have been taken. I just took one sample for the example so that 30 bar plots were not clogging up my knitted file.  
+
+# Task 5  
+
+* Use R to calculate:  
+
+  * $8 \choose 4$  
+  
+```{r}
+choose(8, 4)
+```
+
+  * $P(Y > 4), Y \sim Pois(\lambda = 2)$  
+  
+```{r}
+1 - ppois(q = 3, lambda = 2)
+```
+
+* Some more calculations in R  
+
+  * $P(y = 10), Y \sim NegBin(p = 0.4, r = 3)$  
+  
+```{r}
+choose(10 - 1, 3 - 1) * 0.4 ^ 3 * 0.6 ^ (10 - 3)
+```
+
+  * $(P \leq 8), Y \sim Bin(n = 15, p = 0.4) $
+
+```{r}
+pbinom(q = 8, size = 15, prob = 0.4)
+```
+
+# Task 6
+
+I will put the myhyper() function in my package and run an example. The function is renamed to myhypergeometric() to avoid any naming errors in Lab 5, and to show that I am running it from my package.
+
+```{r}
+# Install package
+devtools::install_local("C:/Users/Hunter/Desktop/Math4753Spring2023.zip")
+```
+
+
+```{r}
+# Ensure the package is installed correctly and recognized in Lab 5
+library(Math4753Spring2023)
+```
+
+
+```{r}
+# Run myhypergeometric() example
+Math4753Spring2023::myhypergeometric(iter=1000, n=7, N=20, r=12)
+```
+
+
+```{r}
+# CLEAN UP #################################################
+
+# Clear environment
+rm(list = ls()) 
+
+# Clear packages
+p_unload(all)  # Remove all add-ons
+
+# Clear plots
+dev.off()  # But only if there IS a plot
+
+# Clear console
+cat("\014")  # ctrl+L
+
+# Clear mind :)
+```
